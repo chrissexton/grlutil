@@ -16,6 +16,7 @@ const (
 	COIN
 	STAIRS_DOWN
 	TORCH
+
 	MAPSIZE = 15
 )
 
@@ -32,7 +33,7 @@ var qwerty keymap = keymap{
 	down:  's',
 	left:  'a',
 	right: 'd',
-	quit:  27,
+	quit:  'q',
 }
 
 var dvorak keymap = keymap{
@@ -40,33 +41,39 @@ var dvorak keymap = keymap{
 	down:  'o',
 	left:  'a',
 	right: 'e',
-	quit:  27,
+	quit:  'q',
 }
 
 var x, y int
-var coins, moves, torch, level int = 0, 0, 30, 1
+
+var coins, moves, torch, level int
+
 var lvl [MAPSIZE][MAPSIZE]int
 
 /// Generates the dungeon map
 func gen(seed int) {
 	rand.Seed(int64(seed))
+
 	for j := 0; j < MAPSIZE; j++ {
 		for i := 0; i < MAPSIZE; i++ {
 			if i == 0 || i == MAPSIZE-1 || j == 0 || j == MAPSIZE-1 || rand.Int()%10 == 0 {
-				lvl[i][j] = 1
+				lvl[i][j] = WALL
 			} else if rand.Int()%20 == 0 {
 				lvl[i][j] = COIN
 			} else if rand.Int()%100 == 0 {
 				lvl[i][j] = TORCH
 			} else {
-				lvl[i][j] = 0
+				lvl[i][j] = FLOOR
 			}
 		}
 	}
-	var randcoord int
-	x = 1 + rand.Int()%MAPSIZE - 2
-	y = 1 + rand.Int()%MAPSIZE - 2
-	lvl[randcoord][randcoord] = STAIRS_DOWN
+
+	x = 1 + rand.Int()%(MAPSIZE-2)
+	y = 1 + rand.Int()%(MAPSIZE-2)
+
+	x1 := 1 + rand.Int()%(MAPSIZE-2)
+	y1 := 1 + rand.Int()%(MAPSIZE-2)
+	lvl[x1][y1] = STAIRS_DOWN
 }
 
 /// Draws the screen
@@ -86,19 +93,19 @@ func draw() {
 		for i := 0; i < MAPSIZE; i++ {
 			if rl.Abs(x-i)+rl.Abs(y-j) > rl.Min(10, torch/2) {
 				fmt.Printf(" ")
-			} else if lvl[i][j] == 0 {
+			} else if lvl[i][j] == FLOOR {
 				rl.SetColor(rl.BLUE)
 				fmt.Printf(".")
-			} else if lvl[i][j]&WALL != 0 {
+			} else if lvl[i][j] == WALL {
 				rl.SetColor(rl.CYAN)
 				fmt.Printf("#")
-			} else if lvl[i][j]&COIN != 0 {
+			} else if lvl[i][j] == COIN {
 				rl.SetColor(rl.YELLOW)
 				fmt.Printf("o")
-			} else if lvl[i][j]&STAIRS_DOWN != 0 {
+			} else if lvl[i][j] == STAIRS_DOWN {
 				rl.SetColor(rl.GREEN)
 				fmt.Printf("<")
-			} else if lvl[i][j]&TORCH != 0 {
+			} else if lvl[i][j] == TORCH {
 				rl.SetColor(rl.RED)
 				fmt.Printf("f")
 			}
@@ -113,6 +120,9 @@ func draw() {
 /// Main loop and input handling
 func main() {
 	useDvorak := flag.Bool("dvorak", false, "Use dvorak keybindings (,oae)")
+	flag.IntVar(&torch, "torches", 30, "[cheat] Set initial number of torches")
+	flag.IntVar(&coins, "coins", 0, "[cheat] Set initial number of coins")
+	flag.IntVar(&level, "level", 1, "[cheat] Set initial level")
 	flag.Parse()
 
 	keys := qwerty
@@ -150,22 +160,22 @@ func main() {
 			} else if k == keys.down {
 				y++
 				moves++
-			} else if k == 27 {
+			} else if k == keys.quit {
 				break
 			} else {
 				continue
 			}
 			// Collisions
-			if lvl[x][y]&WALL != 0 {
+			if lvl[x][y] == WALL {
 				x = oldx
 				y = oldy
-			} else if lvl[x][y]&COIN != 0 {
+			} else if lvl[x][y] == COIN {
 				coins++
 				lvl[x][y] ^= COIN
-			} else if lvl[x][y]&TORCH != 0 {
+			} else if lvl[x][y] == TORCH {
 				torch += 20
 				lvl[x][y] ^= TORCH
-			} else if lvl[x][y]&STAIRS_DOWN != 0 {
+			} else if lvl[x][y] == STAIRS_DOWN {
 				level++
 				gen(level)
 			}
