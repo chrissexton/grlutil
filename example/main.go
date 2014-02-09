@@ -132,13 +132,13 @@ func main() {
 
 	rl.HideCursor()
 	gen(level)
-	rl.SetColor(2)
+	rl.SetColor(rl.GREEN)
 	if *useDvorak {
 		fmt.Printf("Welcome! Use ,oae (the physical WSAD keys) to move.\n")
 	} else {
 		fmt.Printf("Welcome! Use WASD to move.\n")
 	}
-	rl.SetColor(6)
+	rl.SetColor(rl.CYAN)
 	fmt.Printf("Hit any key to start.\n")
 	rl.AnyKey()
 	draw()
