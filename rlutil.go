@@ -24,10 +24,6 @@ func KbHit() bool {
 	return C.kbhit() == 0
 }
 
-func GotoXY(x, y int) {
-	Locate(x, y)
-}
-
 const (
 	// Comparable colors
 	BLACK = iota
@@ -110,7 +106,7 @@ const (
 )
 
 // Get a numeric keycode from the system
-func getKey() rune {
+func GetKey() rune {
 	k := GetCh()
 	switch k {
 	case 0:
